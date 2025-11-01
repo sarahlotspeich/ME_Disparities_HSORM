@@ -1,17 +1,19 @@
-Examining the Impacts of Measurement Error in Quantifying Health
-Disparities: A Case Study on Diabetes and the Food Environment
-================
+---
+title: "Examining the Impacts of Measurement Error in Quantifying Health Disparities: A Case Study on Diabetes and the Food Environment"
+output: github_document
+---
 
-This repository contains `R` code to reproduce results from the
-manuscript by Hung, Green, and Lotspeich (2025+).
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, fig.width = 6, fig.height = 4)
+```
 
-## Packages
+This repository contains `R` code to reproduce results from the manuscript by Hung, Green, and Lotspeich (2025+). 
 
-Our implementation of the health disparities methods in the paper rely
-on the following `R` packages, which can be installed and loaded as
-follows.
+## Packages 
 
-``` r
+Our implementation of the health disparities methods in the paper rely on the following `R` packages, which can be installed and loaded as follows. 
+
+```{r}
 # Run once: install.packages(c("dplyr", "ggplot2", "scales", "epitools", "rineq"))
 library(dplyr) ## for data wrangling
 library(ggplot2) ## for concentration curves
@@ -22,50 +24,16 @@ library(rineq) ## for concentration indices
 
 ## Data
 
-With permission from the Institutional Review Board at Wake Forest
-University School of Medicine, a de-identified version of the study
-dataset have been made available with the paper as Supplementary
-Material. Once downloaded, these data can be loaded as follows.
+With permission from the Institutional Review Board at Wake Forest University School of Medicine, a de-identified version of the study dataset have been made available with the paper as Supplementary Material. Once downloaded, these data can be loaded as follows. 
 
-``` r
+```{r}
 # Read in the data from CSV
 ehr_food = read.csv("https://raw.githubusercontent.com/sarahlotspeich/ME_Disparities_HSORM/refs/heads/main/me_disparities_analysis_2020.csv")
 
 ## Inspect data summary
 ehr_food |> 
   summary()
-```
 
-    ##        ID           DIABETES       MAP_PROXIMITY       STRAIGHT_PROXIMITY 
-    ##  Min.   :  1.0   Min.   :0.00000   Min.   :2.880e-05   Min.   :2.880e-05  
-    ##  1st Qu.:231.8   1st Qu.:0.00000   1st Qu.:9.503e-01   1st Qu.:6.074e-01  
-    ##  Median :462.5   Median :0.00000   Median :1.701e+00   Median :1.140e+00  
-    ##  Mean   :462.5   Mean   :0.06818   Mean   :2.512e+00   Mean   :1.738e+00  
-    ##  3rd Qu.:693.2   3rd Qu.:0.00000   3rd Qu.:3.572e+00   3rd Qu.:2.291e+00  
-    ##  Max.   :924.0   Max.   :1.00000   Max.   :1.547e+01   Max.   :1.019e+01  
-    ##  MAP_PROXIMITY_BINNED STRAIGHT_PROXIMITY_BINNED EST_FOOD_INSECURITY
-    ##  Length:924           Length:924                Min.   : 5.30      
-    ##  Class :character     Class :character          1st Qu.:11.90      
-    ##  Mode  :character     Mode  :character          Median :16.10      
-    ##                                                 Mean   :16.08      
-    ##                                                 3rd Qu.:20.90      
-    ##                                                 Max.   :29.20      
-    ##  LB_FOOD_INSECURITY UB_FOOD_INSECURITY EST_FOOD_INSECURITY_BINNED
-    ##  Min.   : 4.60      Min.   : 6.00      Length:924                
-    ##  1st Qu.:10.60      1st Qu.:13.20      Class :character          
-    ##  Median :14.50      Median :18.00      Mode  :character          
-    ##  Mean   :14.46      Mean   :17.76                                
-    ##  3rd Qu.:19.00      3rd Qu.:22.80                                
-    ##  Max.   :26.70      Max.   :31.60                                
-    ##  LB_FOOD_INSECURITY_BINNED UB_FOOD_INSECURITY_BINNED
-    ##  Length:924                Length:924               
-    ##  Class :character          Class :character         
-    ##  Mode  :character          Mode  :character         
-    ##                                                     
-    ##                                                     
-    ## 
-
-``` r
 ## Define levels for binned factors
 prox_levels = c("More than 5 Miles", "Between 4-5 Miles", "Between 3-4 Miles", 
                 "Between 2-3 Miles", "Between 1-2 Miles", "Up to 1 Mile")
@@ -85,44 +53,28 @@ ehr_food = ehr_food |>
                                             levels = insec_levels))
 ```
 
-The dataset contains the following columns.
+The dataset contains the following columns.  
 
-- `ID`: a deidentified patient identifier
-- `DIABETES`: a binary indicator of being diagnosed with type-2 diabetes
-  (`=0` if no, `=1` if yes)
-- `MAP_PROXIMITY`: unbinned map-based proximity to healthy foods (in
-  miles)
-- `STRAIGHT_PROXIMITY`: unbinned straight-line proximity to healthy
-  foods (in miles)
-- `MAP_PROXIMITY_BINNED`: binned map-based proximity to healthy foods
-  (categorical)
-- `STRAIGHT_PROXIMITY_BINNED`: binned straight-line proximity to healthy
-  foods (categorical)
-- `EST_FOOD_INSECURITY`: unbinned survey estimate of neighborhood rate
-  of food insecurity (percent, between `0` and `100`)
-- `LB_FOOD_INSECURITY`: unbinned lower bound on neighborhood rate of
-  food insecurity, taken from the 95% confidence interval (percent,
-  between `0` and `100`)
-- `UB_FOOD_INSECURITY`: unbinned upper bound on neighborhood rate of
-  food insecurity, taken from the 95% confidence interval (percent,
-  between `0` and `100`)
-- `EST_FOOD_INSECURITY_BINNED`: binned survey estimate of neighborhood
-  rate of food insecurity (categorical)
-- `LB_FOOD_INSECURITY_BINNED`: binned lower bound on neighborhood rate
-  of food insecurity, taken from the 95% confidence interval
-  (categorical)
-- `UB_FOOD_INSECURITY_BINNED`: binned upper bound on neighborhood rate
-  of food insecurity, taken from the 95% confidence interval
-  (categorical)
+  - `ID`: a deidentified patient identifier 
+  - `DIABETES`: a binary indicator of being diagnosed with type-2 diabetes (`=0` if no, `=1` if yes)
+  - `MAP_PROXIMITY`: unbinned map-based proximity to healthy foods (in miles)
+  - `STRAIGHT_PROXIMITY`: unbinned straight-line proximity to healthy foods (in miles)
+  - `MAP_PROXIMITY_BINNED`: binned map-based proximity to healthy foods (categorical)
+  - `STRAIGHT_PROXIMITY_BINNED`: binned straight-line proximity to healthy foods (categorical)
+  - `EST_FOOD_INSECURITY`: unbinned survey estimate of neighborhood rate of food insecurity (percent, between `0` and `100`)
+  - `LB_FOOD_INSECURITY`: unbinned lower bound on neighborhood rate of food insecurity, taken from the 95% confidence interval (percent, between `0` and `100`)
+  - `UB_FOOD_INSECURITY`: unbinned upper bound on neighborhood rate of food insecurity, taken from the 95% confidence interval (percent, between `0` and `100`)
+  - `EST_FOOD_INSECURITY_BINNED`: binned survey estimate of neighborhood rate of food insecurity (categorical)
+  - `LB_FOOD_INSECURITY_BINNED`: binned lower bound on neighborhood rate of food insecurity, taken from the 95% confidence interval (categorical)
+  - `UB_FOOD_INSECURITY_BINNED`: binned upper bound on neighborhood rate of food insecurity, taken from the 95% confidence interval (categorical)
+  
+Each row represents data for one patient. 
 
-Each row represents data for one patient.
+## Useful Functions 
 
-## Useful Functions
+The `logbin_rr` function, defined below, calculates the rate ratio (RR) and its 95% confidence interval from a log-binomial regression model.   
 
-The `logbin_rr` function, defined below, calculates the rate ratio (RR)
-and its 95% confidence interval from a log-binomial regression model.
-
-``` r
+```{r}
 # Write a function that calculates RR (95% CI) from a log-binomial model
 ### formula: Model formula, like Y ~ X 
 ### data: Dataset where variables in the model formula can be found
@@ -139,12 +91,9 @@ logbin_rr = function(formula, data) {
 }
 ```
 
-The `mod_rii` function, defined below, calculates the relative index of
-inequality (RII) and its 95% confidence interval using the Poisson
-regression approach by [Moreno-Betancur et
-al. (2015)](https://journals.lww.com/epidem/abstract/2015/07000/relative_index_of_inequality_and_slope_index_of.12.aspx).
+The `mod_rii` function, defined below, calculates the relative index of inequality (RII) and its 95% confidence interval using the Poisson regression approach by [Moreno-Betancur et al. (2015)](https://journals.lww.com/epidem/abstract/2015/07000/relative_index_of_inequality_and_slope_index_of.12.aspx). 
 
-``` r
+```{r}
 # Write a function that calculates RII (95% CI) from a Poisson model
 ## Arguments: 
 ### health_var: name of health outcome 
@@ -179,10 +128,9 @@ mod_rii = function(health_var, group_by_var, data) {
 }
 ```
 
-The `make_cc_dat` function, defined below, constructs the ranked
-dataset, which can be used to build a concentration curve.
+The `make_cc_dat` function, defined below, constructs the ranked dataset, which can be used to build a concentration curve. 
 
-``` r
+```{r}
 # Write a function that create the dataset for a concentration curve
 ## Arguments: 
 ### health_var: name of health outcome 
@@ -211,10 +159,9 @@ make_cc_dat = function(health_var, group_by_var, data) {
 }
 ```
 
-The `calc_grouped_ci` function, defined below, calculates the
-concentration index with its 95% confidence interval from grouped data.
+The `calc_grouped_ci` function, defined below, calculates the concentration index with its 95% confidence interval from grouped data. 
 
-``` r
+```{r}
 # Write a function that calculate the concentration index (C) from grouped data
 ## Arguments: 
 ### health_var: name of health outcome 
@@ -262,87 +209,53 @@ calc_grouped_ci = function(group_by_var, health_var, data) {
 
 ## Analysis of Household Proximity to Healthy Foods
 
-### Rate Ratios
+### Rate Ratios 
 
 #### Binned Exposure
 
-``` r
+```{r, warning = FALSE}
 ## Prevalence rate ratios based on straight-line proximity (binned)
 tab_straight = with(ehr_food, table(STRAIGHT_PROXIMITY_BINNED, DIABETES))
 rr_straight = data.frame(riskratio(tab_straight, rev = "rows")$measure)
 rr_straight
-```
 
-    ##                   estimate     lower    upper
-    ## Up to 1 Mile      1.000000        NA       NA
-    ## Between 1-2 Miles 1.092593 0.6083895 1.962162
-    ## Between 2-3 Miles 1.000692 0.4480019 2.235225
-    ## Between 3-4 Miles 1.487140 0.6730990 3.285676
-    ## Between 4-5 Miles 0.000000 0.0000000      NaN
-    ## More than 5 Miles 1.443047 0.5806423 3.586346
-
-``` r
 ## Prevalence rate ratios based on map-based proximity (binned)
 tab_map = with(ehr_food, table(MAP_PROXIMITY_BINNED, DIABETES))
 rr_map = data.frame(riskratio(tab_map, rev = "rows")$measure)
 rr_map
 ```
 
-    ##                    estimate     lower    upper
-    ## Up to 1 Mile      1.0000000        NA       NA
-    ## Between 1-2 Miles 1.3784461 0.7318271 2.596397
-    ## Between 2-3 Miles 0.6613757 0.2459461 1.778510
-    ## Between 3-4 Miles 1.0869565 0.4348702 2.716844
-    ## Between 4-5 Miles 1.8779343 0.8299323 4.249307
-    ## More than 5 Miles 0.9803922 0.4106589 2.340553
-
 #### Unbinned Exposure
 
-``` r
+```{r, warning = FALSE}
 ## Prevalence rate ratio based on straight-line proximity (unbinned)
 logbin_rr(formula = DIABETES ~ STRAIGHT_PROXIMITY, 
           data = ehr_food)
-```
 
-    ##        RR        LB        UB 
-    ## 1.0012044 0.8569016 1.1427091
-
-``` r
 ## Prevalence rate ratio based on map-based proximity (unbinned)
 logbin_rr(formula = DIABETES ~ MAP_PROXIMITY,
           data = ehr_food)
 ```
 
-    ##        RR        LB        UB 
-    ## 1.0136741 0.9055229 1.1152475
+### Relative Index of Inequality 
 
-### Relative Index of Inequality
-
-``` r
+```{r}
 ## Relative index of inequality based on straight-line proximity (binned)
 mod_rii(health_var = DIABETES, 
         group_by_var = STRAIGHT_PROXIMITY_BINNED, 
         data = ehr_food)
-```
 
-    ##       RII        LB        UB 
-    ## 1.1196108 0.4485444 2.7463805
-
-``` r
 ## Relative index of inequality based on straight-line proximity (binned)
 mod_rii(health_var = DIABETES, 
         group_by_var = MAP_PROXIMITY_BINNED, 
         data = ehr_food)
 ```
 
-    ##       RII        LB        UB 
-    ## 1.0966057 0.4541682 2.6378360
-
 ### Concentration Curve
 
 #### Binned Exposure
 
-``` r
+```{r}
 ## Define plot colors
 cols = c("#ff99ff", "#8bdddb", "#787ff6", "#ffbd59", "#7dd5f6", "#ff914d")
 
@@ -378,11 +291,9 @@ cc_dat|>
   scale_color_manual(values = cols, name = "Distance")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
-
 #### Unbinned Exposure
 
-``` r
+```{r}
 ## Create negative proximity to rank from farthest (most disadvantaged) --> nearest (least disadvantaged)
 ehr_food = ehr_food |> 
   dplyr::mutate(NEG_STRAIGHT_PROXIMITY = - STRAIGHT_PROXIMITY, 
@@ -419,60 +330,32 @@ cc_dat |>
   scale_color_manual(values = cols, name = "Distance")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
-
 ### Concentration Index
 
-#### Binned Exposure
+#### Binned Exposure 
 
-``` r
+```{r}
 ## Concentration index based on straight-line proximity (binned)
 calc_grouped_ci(group_by_var = STRAIGHT_PROXIMITY_BINNED, 
                 health_var = DIABETES, 
                 data = ehr_food)
-```
 
-    ##         CI         LB         UB 
-    ## -0.0168522 -0.1470394  0.1133350
-
-``` r
 ## Concentration index based on map-based proximity (binned)
 calc_grouped_ci(group_by_var = MAP_PROXIMITY_BINNED, 
                 health_var = DIABETES, 
                 data = ehr_food)
 ```
 
-    ##          CI          LB          UB 
-    ## -0.01461898 -0.14701374  0.11777578
-
 #### Unbinned Exposure
 
-``` r
+```{r}
 ## Concentration index based on straight-line proximity (unbinned)
 ci_straight = ci(ineqvar = ehr_food$NEG_STRAIGHT_PROXIMITY, ### Food environment exposure
                  outcome = ehr_food$DIABETES, ### Health outcome 
                  type = "CIw", ### Wagstaff's correction for binary health outcome
                  robust_se = TRUE) ### Use sandwich standard errors for confidence interval 
 summary(ci_straight)
-```
 
-    ## Call:
-    ## [1] "ci(ineqvar = ehr_food$NEG_STRAIGHT_PROXIMITY, outcome = ehr_food$DIABETES, "
-    ## [2] "    type = \"CIw\", robust_se = TRUE)"                                      
-    ## 
-    ## Type of Concentration Index:
-    ##  CIw 
-    ## 
-    ## Health Concentration Index:
-    ##  -0.003078738 
-    ## 
-    ## Variance:
-    ##  0.005611874 
-    ## 
-    ## 95% Confidence Interval:
-    ##  -0.1499044 0.1437469
-
-``` r
 ## Concentration index based on map-based proximity (unbinned)
 ci_map = ci(ineqvar = ehr_food$NEG_MAP_PROXIMITY, ### Food environment exposure
                  outcome = ehr_food$DIABETES, ### Health outcome 
@@ -481,139 +364,69 @@ ci_map = ci(ineqvar = ehr_food$NEG_MAP_PROXIMITY, ### Food environment exposure
 summary(ci_map)
 ```
 
-    ## Call:
-    ## [1] "ci(ineqvar = ehr_food$NEG_MAP_PROXIMITY, outcome = ehr_food$DIABETES, "
-    ## [2] "    type = \"CIw\", robust_se = TRUE)"                                 
-    ## 
-    ## Type of Concentration Index:
-    ##  CIw 
-    ## 
-    ## Health Concentration Index:
-    ##  -0.02026068 
-    ## 
-    ## Variance:
-    ##  0.00553609 
-    ## 
-    ## 95% Confidence Interval:
-    ##  -0.1660916 0.1255703
-
 ## Analysis of Neighborhood Food Insecurity
 
-### Rate Ratios
+### Rate Ratios 
 
 #### Binned Exposure
 
-``` r
+```{r, warning = FALSE}
 ## Prevalence rate ratios based on survey estimate food insecurity (binned)
 tab_est = with(ehr_food, table(EST_FOOD_INSECURITY_BINNED, DIABETES))
 rr_est = data.frame(riskratio(tab_est, rev = "rows")$measure)
 rr_est
-```
 
-    ##                   estimate     lower    upper
-    ## Up to 10%        1.0000000        NA       NA
-    ## Between 10-12.5% 0.3641975 0.0834310 1.589815
-    ## Between 12.5-15% 0.9600592 0.4354942 2.116477
-    ## Between 15-17.5% 0.8750000 0.3548332 2.157704
-    ## Between 17.5-20% 1.2178899 0.5307070 2.794868
-    ## More than 20%    1.2018519 0.6104945 2.366029
-
-``` r
 ## Prevalence rate ratios based on lower bound food insecurity (binned)
 tab_lb = with(ehr_food, table(LB_FOOD_INSECURITY_BINNED, DIABETES))
 rr_lb = data.frame(riskratio(tab_lb, rev = "rows")$measure)
 rr_lb
-```
 
-    ##                   estimate     lower    upper
-    ## Up to 10%        1.0000000        NA       NA
-    ## Between 10-12.5% 0.4071730 0.1339359 1.237829
-    ## Between 12.5-15% 1.3864943 0.6675526 2.879723
-    ## Between 15-17.5% 0.8935185 0.2087473 3.824602
-    ## Between 17.5-20% 1.0767085 0.5219766 2.220983
-    ## More than 20%    1.8158602 0.8687047 3.795707
-
-``` r
 ## Prevalence rate ratios based on upper bound food insecurity (binned)
 tab_ub = with(ehr_food, table(UB_FOOD_INSECURITY_BINNED, DIABETES))
 rr_ub = data.frame(riskratio(tab_ub)$measure)
 rr_ub
 ```
 
-    ##                   estimate      lower    upper
-    ## More than 20%    1.0000000         NA       NA
-    ## Between 17.5-20% 1.0444444 0.49484619 2.204451
-    ## Between 15-17.5% 0.8837607 0.45442442 1.718730
-    ## Between 12.5-15% 0.2433657 0.05913981 1.001472
-    ## Between 10-12.5% 0.5632959 0.20365731 1.558020
-    ## Up to 10%        0.9641026 0.45584225 2.039069
-
 #### Unbinned Exposure
 
-``` r
+```{r, warning = FALSE}
 ## Prevalence rate ratio based on survey estimate food insecurity (unbinned)
 logbin_rr(formula = DIABETES ~ EST_FOOD_INSECURITY, 
           data = ehr_food)
-```
 
-    ##        RR        LB        UB 
-    ## 1.0325328 0.9857904 1.0819680
-
-``` r
 ## Prevalence rate ratio based on lower bound food insecurity (unbinned)
 logbin_rr(formula = DIABETES ~ LB_FOOD_INSECURITY, 
           data = ehr_food)
-```
 
-    ##        RR        LB        UB 
-    ## 1.0356549 0.9852063 1.0891817
-
-``` r
 ## Prevalence rate ratio based on upper bound food insecurity (unbinned)
 logbin_rr(formula = DIABETES ~ UB_FOOD_INSECURITY, 
           data = ehr_food)
 ```
 
-    ##        RR        LB        UB 
-    ## 1.0302874 0.9867722 1.0761693
+### Relative Index of Inequality 
 
-### Relative Index of Inequality
-
-``` r
+```{r}
 ## Relative index of inequality based on survey estimate food insecurity (binned)
 mod_rii(health_var = DIABETES, 
         group_by_var = EST_FOOD_INSECURITY_BINNED, 
         data = ehr_food)
-```
 
-    ##       RII        LB        UB 
-    ## 1.6530293 0.6871525 4.0523816
-
-``` r
 ## Relative index of inequality based on lower bound food insecurity (binned)
 mod_rii(health_var = DIABETES, 
         group_by_var = LB_FOOD_INSECURITY_BINNED, 
         data = ehr_food)
-```
 
-    ##       RII        LB        UB 
-    ## 2.2605885 0.9371285 5.5732896
-
-``` r
 ## Relative index of inequality based on upper bound food insecurity (binned)
 mod_rii(health_var = DIABETES, 
         group_by_var = UB_FOOD_INSECURITY_BINNED, 
         data = ehr_food)
 ```
 
-    ##       RII        LB        UB 
-    ## 1.8074586 0.7338411 4.6124180
-
 ### Concentration Curve
 
 #### Binned Exposure
 
-``` r
+```{r}
 ## Make dataset for concentration curves (all values)
 cc_dat = make_cc_dat(group_by_var = LB_FOOD_INSECURITY_BINNED, 
                      health_var = DIABETES, 
@@ -653,11 +466,9 @@ cc_dat |>
   scale_color_manual(values = rev(cols[-length(cols)]), name = "Distance")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
-
 #### Unbinned Exposure
 
-``` r
+```{r}
 ## Create negative neighborhood food insecurity to rank from highest (most disadvantaged) --> lowest (least disadvantaged)
 ehr_food = ehr_food |> 
   dplyr::mutate(NEG_EST_FOOD_INSECURITY = - EST_FOOD_INSECURITY, 
@@ -703,95 +514,44 @@ cc_dat |>
   scale_color_manual(values = rev(cols[-length(cols)]), name = "Distance")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
-
 ### Concentration Index
 
 #### Binned Exposure
 
-``` r
+```{r}
 ## Concentration index based on survey estimate food insecurity (binned)
 calc_grouped_ci(group_by_var = EST_FOOD_INSECURITY_BINNED, 
                 health_var = DIABETES, 
                 data = ehr_food)
-```
 
-    ##          CI          LB          UB 
-    ## -0.07950251 -0.21598215  0.05697713
-
-``` r
 ## Concentration index based on lower bound food insecurity (binned)
 calc_grouped_ci(group_by_var = LB_FOOD_INSECURITY_BINNED, 
                 health_var = DIABETES, 
                 data = ehr_food)
-```
 
-    ##           CI           LB           UB 
-    ## -0.128908129 -0.267642306  0.009826048
-
-``` r
 ## Concentration index based on upper bound food insecurity (binned)
 calc_grouped_ci(group_by_var = UB_FOOD_INSECURITY_BINNED, 
                 health_var = DIABETES, 
                 data = ehr_food)
 ```
 
-    ##          CI          LB          UB 
-    ## -0.08888202 -0.22069648  0.04293245
-
 #### Unbinned Exposure
 
-``` r
+```{r}
 ## Concentration index based on survey estimate food insecurity (unbinned)
 ci_est = ci(ineqvar = ehr_food$NEG_EST_FOOD_INSECURITY, ### Food environment exposure
             outcome = ehr_food$DIABETES, ### Health outcome 
             type = "CIw", ### Wagstaff's correction for binary health outcome
             robust_se = TRUE) ### Use sandwich standard errors for confidence interval 
 summary(ci_est)
-```
 
-    ## Call:
-    ## [1] "ci(ineqvar = ehr_food$NEG_EST_FOOD_INSECURITY, outcome = ehr_food$DIABETES, "
-    ## [2] "    type = \"CIw\", robust_se = TRUE)"                                       
-    ## 
-    ## Type of Concentration Index:
-    ##  CIw 
-    ## 
-    ## Health Concentration Index:
-    ##  -0.1603709 
-    ## 
-    ## Variance:
-    ##  0.006078574 
-    ## 
-    ## 95% Confidence Interval:
-    ##  -0.3131799 -0.007561918
-
-``` r
 ## Concentration index based on lower bound food insecurity (unbinned)
 ci_lb = ci(ineqvar = ehr_food$NEG_LB_FOOD_INSECURITY, ### Food environment exposure
            outcome = ehr_food$DIABETES, ### Health outcome 
            type = "CIw", ### Wagstaff's correction for binary health outcome
            robust_se = TRUE) ### Use sandwich standard errors for confidence interval 
 summary(ci_lb)
-```
 
-    ## Call:
-    ## [1] "ci(ineqvar = ehr_food$NEG_LB_FOOD_INSECURITY, outcome = ehr_food$DIABETES, "
-    ## [2] "    type = \"CIw\", robust_se = TRUE)"                                      
-    ## 
-    ## Type of Concentration Index:
-    ##  CIw 
-    ## 
-    ## Health Concentration Index:
-    ##  -0.1602603 
-    ## 
-    ## Variance:
-    ##  0.006087245 
-    ## 
-    ## 95% Confidence Interval:
-    ##  -0.3131783 -0.007342358
-
-``` r
 ## Concentration index based on upper bound food insecurity (unbinned)
 ci_ub = ci(ineqvar = ehr_food$NEG_UB_FOOD_INSECURITY, ### Food environment exposure
            outcome = ehr_food$DIABETES, ### Health outcome 
@@ -799,19 +559,3 @@ ci_ub = ci(ineqvar = ehr_food$NEG_UB_FOOD_INSECURITY, ### Food environment expos
            robust_se = TRUE) ### Use sandwich standard errors for confidence interval 
 summary(ci_ub)
 ```
-
-    ## Call:
-    ## [1] "ci(ineqvar = ehr_food$NEG_UB_FOOD_INSECURITY, outcome = ehr_food$DIABETES, "
-    ## [2] "    type = \"CIw\", robust_se = TRUE)"                                      
-    ## 
-    ## Type of Concentration Index:
-    ##  CIw 
-    ## 
-    ## Health Concentration Index:
-    ##  -0.1601128 
-    ## 
-    ## Variance:
-    ##  0.006077284 
-    ## 
-    ## 95% Confidence Interval:
-    ##  -0.3129056 -0.007320041
